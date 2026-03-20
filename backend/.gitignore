@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+
+# User specific files
+*.user
+*.rsuser
+*.suo
+
+# Rider / VS / VS Code
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# ASP.NET local settings
+appsettings.Development.json
+.DS_Store
