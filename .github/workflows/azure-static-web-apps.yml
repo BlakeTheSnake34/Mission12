@@ -1,0 +1,59 @@
+# Deploy React app to Azure Static Web Apps.
+#
+# Setup (once):
+# 1. Azure Portal → Create "Static Web App" → Source: GitHub → link this repo/branch.
+# 2. In the Static Web App → Manage deployment token → copy token.
+# 3. GitHub repo → Settings → Secrets → Actions:
+#    - AZURE_STATIC_WEB_APPS_API_TOKEN = (deployment token)
+#    - VITE_API_BASE_URL = https://YOUR-API-APP.azurewebsites.net  (no trailing slash)
+# 4. In Azure App Service (API) → Configuration → add application setting:
+#    Cors__Origins__0 = https://YOUR-STATIC-WEB-APP.azurestaticapps.net
+#
+name: Azure Static Web Apps — frontend
+
+on:
+  push:
+    branches:
+      - Phase06
+    paths:
+      - "frontend/**"
+      - ".github/workflows/azure-static-web-apps.yml"
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - Phase06
+    paths:
+      - "frontend/**"
+      - ".github/workflows/azure-static-web-apps.yml"
+
+jobs:
+  build_and_deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and deploy
+    env:
+      VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: frontend
+          api_location: ""
+          output_location: dist
+          app_build_command: npm ci && npm run build
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close SWA PR environment
+    steps:
+      - name: Close
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close

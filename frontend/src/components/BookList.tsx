@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE } from "../apiBase";
 
 type Book = {
   bookId: number;
@@ -61,7 +62,7 @@ function BookList() {
   }, [page, selectedCategory, pageSize, sortOrder]);
 
   useEffect(() => {
-    fetch("http://localhost:5002/api/books/categories")
+    fetch(`${API_BASE}/api/books/categories`)
       .then((response) => response.json())
       .then((data: string[]) => {
         setCategories(data);
@@ -71,7 +72,7 @@ function BookList() {
 
   useEffect(() => {
     fetch(
-      `http://localhost:5002/api/books?page=${page}&pageSize=${pageSize}&sortOrder=${sortOrder}&category=${selectedCategory}`
+      `${API_BASE}/api/books?page=${page}&pageSize=${pageSize}&sortOrder=${sortOrder}&category=${selectedCategory}`
     )
       .then((response) => response.json())
       .then((data: ApiResponse) => {
