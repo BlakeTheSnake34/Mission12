@@ -32,6 +32,7 @@ function BookList() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [totalNumBooks, setTotalNumBooks] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const savedCart = sessionStorage.getItem("cart");
@@ -62,24 +63,48 @@ function BookList() {
   }, [page, selectedCategory, pageSize, sortOrder]);
 
   useEffect(() => {
+    if (categories.length === 0) return;
+    const valid =
+      selectedCategory === "All" || categories.includes(selectedCategory);
+    if (!valid) {
+      setSelectedCategory("All");
+      setPage(1);
+    }
+  }, [categories, selectedCategory]);
+
+  useEffect(() => {
     fetch(`${API_BASE}/api/books/categories`)
-      .then((response) => response.json())
-      .then((data: string[]) => {
-        setCategories(data);
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Categories request failed (${response.status})`);
+        }
+        return response.json();
       })
-      .catch((error) => console.error("Error fetching categories:", error));
+      .then((data: string[]) => setCategories(data))
+      .catch((error: Error) => console.error("Error fetching categories:", error));
   }, []);
 
   useEffect(() => {
+    setLoadError(null);
     fetch(
-      `${API_BASE}/api/books?page=${page}&pageSize=${pageSize}&sortOrder=${sortOrder}&category=${selectedCategory}`
+      `${API_BASE}/api/books?page=${page}&pageSize=${pageSize}&sortOrder=${sortOrder}&category=${encodeURIComponent(selectedCategory)}`
     )
-      .then((response) => response.json())
-      .then((data: ApiResponse) => {
-        setBooks(data.books);
-        setTotalNumBooks(data.totalNumBooks);
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Books request failed (${response.status})`);
+        }
+        return response.json();
       })
-      .catch((error) => console.error("Error fetching books:", error));
+      .then((data: ApiResponse) => {
+        setBooks(data.books ?? []);
+        setTotalNumBooks(data.totalNumBooks ?? 0);
+      })
+      .catch((error: Error) => {
+        console.error("Error fetching books:", error);
+        setLoadError(error.message);
+        setBooks([]);
+        setTotalNumBooks(0);
+      });
   }, [page, pageSize, sortOrder, selectedCategory]);
 
   const totalPages = Math.ceil(totalNumBooks / pageSize);
@@ -113,6 +138,15 @@ function BookList() {
       <div className="row">
         <div className="col-lg-9">
           <h1 className="mb-4">Online Bookstore</h1>
+
+          {loadError && (
+            <div className="alert alert-warning" role="alert">
+              Could not load data from the API ({loadError}). If you are on the
+              deployed site, ensure the frontend was built with{" "}
+              <code>VITE_API_BASE_URL</code> pointing at your Azure API, or check
+              the browser network tab for blocked requests.
+            </div>
+          )}
 
           <div className="row mb-4 g-3">
             <div className="col-md-4">

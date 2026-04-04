@@ -27,7 +27,8 @@ namespace backend.Controllers
 
             var query = _context.Books.AsQueryable();
 
-            if (!string.IsNullOrEmpty(category) && category != "All")
+            if (!string.IsNullOrEmpty(category)
+                && !category.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(b => b.Category == category);
             }
