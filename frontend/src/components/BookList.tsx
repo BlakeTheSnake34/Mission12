@@ -127,6 +127,22 @@ function BookList() {
     setCart(updatedCart);
   };
 
+  const removeOneFromCart = (bookId: number) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item.book.bookId === bookId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const removeLineFromCart = (bookId: number) => {
+    setCart((prev) => prev.filter((item) => item.book.bookId !== bookId));
+  };
+
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cart.reduce(
     (sum, item) => sum + item.book.price * item.quantity,
@@ -290,9 +306,39 @@ function BookList() {
               {cart.map((item) => (
                 <div key={item.book.bookId} className="mb-3 border-bottom pb-2">
                   <h6>{item.book.title}</h6>
-                  <p className="mb-1">Quantity: {item.quantity}</p>
-                  <p className="mb-1">Price: ${item.book.price.toFixed(2)}</p>
-                  <p className="mb-1">
+                  <p className="mb-2">Price: ${item.book.price.toFixed(2)} each</p>
+                  <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-muted small">Qty</span>
+                    <div className="btn-group" role="group" aria-label={`Quantity for ${item.book.title}`}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => removeOneFromCart(item.book.bookId)}
+                        aria-label="Remove one from cart"
+                      >
+                        −
+                      </button>
+                      <span className="btn btn-sm btn-light border disabled text-body" style={{ pointerEvents: "none" }}>
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => addToCart(item.book)}
+                        aria-label="Add one to cart"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => removeLineFromCart(item.book.bookId)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <p className="mb-0 small text-muted">
                     Subtotal: ${(item.book.price * item.quantity).toFixed(2)}
                   </p>
                 </div>
